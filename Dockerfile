@@ -17,6 +17,8 @@ RUN apt-get -y install autoconf automake build-essential ca-certificates cmake \
 
 RUN apt-get -y install ccache gettext lua-check p7zip-full
 
+USER ko
+WORKDIR /home/ko
 
 # ADD https://github.com/koreader/koreader/releases/download/v2020.07.1/koreader-appimage-x86_64-linux-gnu-v2020.07.1.AppImage appimage
 # RUN chmod +x ./appimage

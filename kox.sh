@@ -1,10 +1,20 @@
-#!/usr/bin/env bash -xv
+#!/usr/bin/env bash 
 
-# brew install -q socat xauth as well as xquartz
+FAIL=0
+for package in xauth socat xquartz; do
+  if [ -n $(brew list ${package} | grep -ic "error:" ) ]; then 
+    FAIL=1
+    echo "MISSING: ${package}"
+  fi
+done
+if [ ${FAIL} -gt 0 ]; then
+  echo "Missing required packages. Review the list above and re-check the intallation guide."
+  exit 
+fi
+# brew install -q socat xauth as well as xquartz --cask
 #
 CONTAINER=kodereaderapp:latest
-# COMMAND="cd koreader && ./kodev run"
-COMMAND="cd /home/ko/squashfs-root  && ./AppRun"
+
 
 NIC=en0
 
@@ -24,6 +34,7 @@ XAUTH=/tmp/.docker.xauth.$USER.$$
 touch $XAUTH
 xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
 
+function build_koreader() {
 git clone https://github.com/koreader/koreader.git
 
 docker run \
@@ -36,12 +47,23 @@ docker run \
   -e DISPLAY=$IPADDR:$DISP_NUM \
   -e XAUTHORITY=$XAUTH \
   $CONTAINER \
-  bash
+  bash "cd koreader && ./kodev fetch-thirdparty && ./kodev build"
 #-c $COMMAND
+}
 
+function run_koreder() {
+  docker run -v $(pwd)/koreader:/home/ko/koreader -it koreader/koappimage:latest bash
+}
+
+CMD="$1"
+shift 
+case "${CMD}" in 
+  build)
+    build_koreader()
+    ;;
+  *)
+    run_koreader()
+    ;;
+esac
 rm -f $XAUTH
 kill %1 # kill the socat job launched above
-
-
-docker run -v $(pwd)/koreader:/home/ko/koreader -it koreader/koappimage:latest bash
-cd koreader && ./kodev fetch-thirdparty
