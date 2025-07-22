@@ -24,6 +24,8 @@ XAUTH=/tmp/.docker.xauth.$USER.$$
 touch $XAUTH
 xauth nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
 
+git clone https://github.com/koreader/koreader.git
+
 docker run \
   -it \
   --rm \
@@ -39,3 +41,7 @@ docker run \
 
 rm -f $XAUTH
 kill %1 # kill the socat job launched above
+
+
+docker run -v $(pwd)/koreader:/home/ko/koreader -it koreader/koappimage:latest bash
+cd koreader && ./kodev fetch-thirdparty
